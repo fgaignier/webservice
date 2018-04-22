@@ -1,6 +1,5 @@
 package com.univ.web;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -10,6 +9,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.TypedQuery;
+
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -35,48 +35,114 @@ public class LibraryController {
 		entityManager = emf.createEntityManager();
 	}
 	
+	/*
+	private Livre buildLivre(Livre l) {
+		TypedQuery<Emprunt> query = entityManager.createQuery("select em from Emprunt em where em.Livre_id like :searchKeyword", Emprunt.class);
+		query.setParameter("searchKeyword", "%"+l.getId()+"%");
+		List<Emprunt> emprunts = query.getResultList();
+		l.setEmprunts(emprunts);
+		return l;
+	}
+	*/
+	
+	// retourne tous les etudiants
+	@CrossOrigin(origins = "http://localhost:4200")
+	@RequestMapping(value = "/etudiants", method = RequestMethod.GET)
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public List<Etudiant> listOfStudents(){
+		List<Etudiant> etudiants = entityManager.createQuery("select e from Etudiant e").getResultList();
+		return etudiants;
+	}
+
+	// retourne un etudiant
+	@CrossOrigin(origins = "http://localhost:4200")
+	@RequestMapping(value = "/etudiant/{numEtudiant}", method = RequestMethod.GET)
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public Etudiant getStudent(@PathVariable("numEtudiant") long numEtudiant){
+		Etudiant etudiant = (Etudiant)entityManager.find(Etudiant.class, numEtudiant);
+		return etudiant;
+	}
+
+		
 	// voir tous les livres
 	@CrossOrigin(origins = "http://localhost:4200")
 	@RequestMapping(value = "/livres", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public List<Livre> listOfLivres(){
-		return entityManager.createQuery("select l from Livre l").getResultList();
+		List<Livre> livres = entityManager.createQuery("select l from Livre l").getResultList();
+		/*
+		List<Livre> result = new ArrayList<Livre>();
+		for(int i = 0; i< livres.size(); i++) {
+			Livre l = buildLivre(livres.get(i));
+			result.add(l);
+		}
+		*/
+		return livres;
 	}
-	
-	// selectionner les livres par titre (non complet)
+		
+	// selectionner les livres par titre et/ou auteur
+	// ou titre partiel et/ou auteur partiel
 	@CrossOrigin(origins = "http://localhost:4200")
-	@RequestMapping(value = "/livres/{titre}", method = RequestMethod.GET)
+	@RequestMapping(value = "/livres/selection", method = RequestMethod.GET)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	public List<Livre> aLivre(@PathVariable("titre") String titre) throws Exception{
-		//return entityManager.createQuery("select l from Livre l where l.titre like '*" + titre + "*'").getResultList();
-		TypedQuery<Livre> query = entityManager.createQuery("select l from Livre l where l.titre like :searchKeyword", Livre.class);
-		query.setParameter("searchKeyword", "%"+titre+"%");
-	    return query.getResultList();
+	public List<Livre> livreSelection(@RequestParam("auteur") String auteur, @RequestParam("titre") String titre) throws Exception{
+		List<Livre> livres;
+		if(!auteur.equals("") && titre.equals("")) {
+			TypedQuery<Livre> query = entityManager.createQuery("select l from Livre l where l.auteur like :searchKeyword", Livre.class);
+			query.setParameter("searchKeyword", "%"+auteur+"%");
+			livres = query.getResultList();
+		} else if(!titre.equals("") && auteur.equals("")) {
+			TypedQuery<Livre> query = entityManager.createQuery("select l from Livre l where l.titre like :searchKeyword", Livre.class);
+			query.setParameter("searchKeyword", "%"+titre+"%");
+		    livres = query.getResultList();
+		} else {
+			TypedQuery<Livre> query = entityManager.createQuery("select l from Livre l where l.auteur like :searchAuteur and l.titre like :searchTitre", Livre.class);
+			query.setParameter("searchAuteur", "%"+auteur+"%");
+			query.setParameter("searchTitre", "%"+titre+"%");
+			livres = query.getResultList();
+		}
+		
+		// need to build the objects
+		/*
+		List<Livre> result = new ArrayList<Livre>();
+		for(int i = 0; i< livres.size(); i++) {
+			Livre l = buildLivre(livres.get(i));
+			result.add(l);
+		}
+		*/
+		return livres;
 	}
 	
 	@CrossOrigin(origins = "http://localhost:4200")
 	@RequestMapping(value = "/livres/{id}", method = RequestMethod.PUT)
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	public Livre emprunt(@PathVariable(name="id") long id, @RequestParam(name="emprunter", required=true) boolean emprunt) {
+	public Livre emprunt(@PathVariable(name="id") long id, @RequestParam("sid") long student_id) {
 		EntityTransaction tx = entityManager.getTransaction();
 		tx.begin();
 		try {
+			//Etudiant etudiant = (Etudiant) entityManager.createQuery("select e from Etudiant e  where e.numEtudiant like :id").setParameter("id", student_id ).getSingleResult();
+			Etudiant etudiant = (Etudiant) entityManager.find(Etudiant.class, student_id);
 			Livre livre = (Livre) entityManager.createQuery("select l from Livre l where l.id like :id").setParameter("id", id ).getSingleResult();
 			if(livre.getDisponibility()) {
-				// terminer. Date de debut = aujourd'hui
+				// Date d'emprunt = aujourd'hui
 				// retour 2 semaines plus tard
-				Emprunt emprunt = new Emprunt();
-				emprunt.setDate_emprunt(Calendar.getInstance().getTime());
-				emprunts.add(emprunt3);
-				emprunt3.setLivre(livre);
-				livre.setDisponibility(true);
-				} else {
-					emprunts.remove(0);
-					livre.setDisponibility(false);
-				}
+				Emprunt e = new Emprunt();
+				Date today = new Date();
+				System.out.println(today);
+				Calendar cal = Calendar.getInstance();
+				cal.add(Calendar.DATE, 7);
+				Date retour = cal.getTime();
+				System.out.println(retour);
+				e.setDate_emprunt(today);
+				e.setDate_retour(retour);
+				e.setEtudiant(etudiant);
+				e.setLivre(livre);
+				livre.addEmprunt(e);
 				livre.setDisponibility(false);
 				entityManager.persist(livre);
 				tx.commit();
@@ -89,4 +155,23 @@ public class LibraryController {
 		return null;
 	}
 
+	@CrossOrigin(origins = "http://localhost:4200")
+	@RequestMapping(value = "/livres/{id}", method = RequestMethod.POST)
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public Livre retour(@PathVariable(name="id") long id) {
+		EntityTransaction tx = entityManager.getTransaction();
+		tx.begin();
+		try {
+			Livre livre = (Livre) entityManager.createQuery("select l from Livre l where l.id like :id").setParameter("id", id ).getSingleResult();
+			livre.setDisponibility(true);
+			entityManager.persist(livre);
+			tx.commit();
+			return livre;
+		} catch (Exception e) {
+			tx.rollback();
+			e.printStackTrace();
+		}
+		return null;
+	}
 }

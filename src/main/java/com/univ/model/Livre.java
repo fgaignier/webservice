@@ -45,6 +45,10 @@ public class Livre {
 		return emprunts;
 	}
 
+	public void addEmprunt(Emprunt e) {
+		emprunts.add(e);
+	}
+	
 	public void setEmprunts(List<Emprunt> emprunts) {
 		this.emprunts = emprunts;
 	}

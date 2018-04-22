@@ -16,11 +16,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Entity
 public class Emprunt {
 	
-	Date date_emprunt;
-	Date date_retour;
-	long idEmprunt;
-	Etudiant etudiant;
-	Livre livre;
+	private Date date_emprunt;
+	private Date date_retour;
+	private long idEmprunt;
+	private Etudiant etudiant;
+	private Livre livre;
 	
 		
 	@Id

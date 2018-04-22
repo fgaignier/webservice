@@ -19,10 +19,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Entity
 public class Etudiant {
 	
-	long numEtudiant;
-	String nom;
-	String prenom;
-	List<Emprunt> emprunts = new ArrayList<Emprunt>();
+	private long numEtudiant;
+	private String nom;
+	private String prenom;
+	private List<Emprunt> emprunts = new ArrayList<Emprunt>();
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
