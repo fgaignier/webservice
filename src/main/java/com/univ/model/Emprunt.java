@@ -21,7 +21,7 @@ public class Emprunt {
 	private long idEmprunt;
 	private Etudiant etudiant;
 	private Livre livre;
-	
+	private boolean returned;
 		
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -36,6 +36,14 @@ public class Emprunt {
 	@Temporal(TemporalType.DATE)
 	public Date getDate_emprunt() {
 		return date_emprunt;
+	}
+
+	public boolean isReturned() {
+		return returned;
+	}
+
+	public void setReturned(boolean returned) {
+		this.returned = returned;
 	}
 
 	public void setDate_emprunt(Date date) {

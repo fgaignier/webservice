@@ -35,16 +35,6 @@ public class LibraryController {
 		entityManager = emf.createEntityManager();
 	}
 	
-	/*
-	private Livre buildLivre(Livre l) {
-		TypedQuery<Emprunt> query = entityManager.createQuery("select em from Emprunt em where em.Livre_id like :searchKeyword", Emprunt.class);
-		query.setParameter("searchKeyword", "%"+l.getId()+"%");
-		List<Emprunt> emprunts = query.getResultList();
-		l.setEmprunts(emprunts);
-		return l;
-	}
-	*/
-	
 	// retourne tous les etudiants
 	@CrossOrigin(origins = "http://localhost:4200")
 	@RequestMapping(value = "/etudiants", method = RequestMethod.GET)
@@ -73,13 +63,7 @@ public class LibraryController {
 	@ResponseBody
 	public List<Livre> listOfLivres(){
 		List<Livre> livres = entityManager.createQuery("select l from Livre l").getResultList();
-		/*
-		List<Livre> result = new ArrayList<Livre>();
-		for(int i = 0; i< livres.size(); i++) {
-			Livre l = buildLivre(livres.get(i));
-			result.add(l);
-		}
-		*/
+		
 		return livres;
 	}
 		
@@ -106,14 +90,6 @@ public class LibraryController {
 			livres = query.getResultList();
 		}
 		
-		// need to build the objects
-		/*
-		List<Livre> result = new ArrayList<Livre>();
-		for(int i = 0; i< livres.size(); i++) {
-			Livre l = buildLivre(livres.get(i));
-			result.add(l);
-		}
-		*/
 		return livres;
 	}
 	
@@ -164,7 +140,9 @@ public class LibraryController {
 		tx.begin();
 		try {
 			Livre livre = (Livre) entityManager.createQuery("select l from Livre l where l.id like :id").setParameter("id", id ).getSingleResult();
-			livre.setDisponibility(true);
+			//livre.setDisponibility(true);
+			Date today = new Date();
+			livre.setReturned(today);
 			entityManager.persist(livre);
 			tx.commit();
 			return livre;

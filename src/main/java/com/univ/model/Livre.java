@@ -1,6 +1,7 @@
 package com.univ.model;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -47,6 +48,17 @@ public class Livre {
 
 	public void addEmprunt(Emprunt e) {
 		emprunts.add(e);
+	}
+	
+	public void setReturned(Date date_retour) {
+		this.setDisponibility(true);
+		for(int i = 0; i<emprunts.size();i++) {
+			Emprunt e = emprunts.get(i);
+			if(!e.isReturned()) {
+				e.setReturned(true);
+				e.setDate_retour(date_retour);
+			}
+		}
 	}
 	
 	public void setEmprunts(List<Emprunt> emprunts) {
